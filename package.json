@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Suyash-coder-12/BeatsVibe-Music#readme",
   "dependencies": {
+    "@distube/ytdl-core": "^4.16.12",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "yt-search": "^2.13.1"

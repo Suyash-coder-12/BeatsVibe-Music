@@ -1,11 +1,12 @@
-const API_URL = "https://beatsvibe-music.onrender.com/api/search?q=";
+// Tera apna Render server (API_BASE)
+const API_BASE = "https://beatsvibe-music.onrender.com";
 
 let currentAudio = new Audio();
 let isPlaying = false;
 let currentSongData = null; 
 let downloadedSongs = []; 
-let currentPlaylist = []; // Gaano ki list save karega
-let currentIndex = 0;     // Kaunsa number chal raha hai
+let currentPlaylist = []; 
+let currentIndex = 0;     
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
@@ -39,10 +40,11 @@ async function searchSongs(query) {
     if (!query) return;
     document.getElementById('sectionTitle').innerText = `Results for "${query}"`;
     const grid = document.getElementById('resultsGrid');
-    grid.innerHTML = '<p style="color: #00f2fe;">Finding full audio tracks...</p>';
+    grid.innerHTML = '<p style="color: var(--brand);">Gaane dhoondh raha hu bhai...</p>';
 
     try {
-        const response = await fetch(API_URL + encodeURIComponent(query));
+        // Sirf search wale raaste par bhej rahe hain
+        const response = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         
         if (data.error || !data.results || data.results.length === 0) {
@@ -50,7 +52,7 @@ async function searchSongs(query) {
             return;
         }
 
-        currentPlaylist = data.results; // Nayi list ko save kiya auto-play ke liye
+        currentPlaylist = data.results; 
         grid.innerHTML = ''; 
 
         data.results.forEach((song, index) => {
@@ -62,8 +64,7 @@ async function searchSongs(query) {
                 <div class="title">${song.title}</div>
                 <div class="artist">${song.artist}</div>
             `;
-            // Click karne par index bhi bhej rahe hain
-            card.onclick = () => loadAndPlaySong(song.url, song.title, song.artist, song.cover, index);
+            card.onclick = () => loadAndPlaySong(song, index);
             grid.appendChild(card);
         });
     } catch (error) {
@@ -71,31 +72,31 @@ async function searchSongs(query) {
     }
 }
 
-function loadAndPlaySong(url, title, artist, cover, index) {
-    document.getElementById('currentTitle').innerText = title;
-    document.getElementById('currentArtist').innerText = artist;
+function loadAndPlaySong(song, index) {
+    document.getElementById('currentTitle').innerText = song.title;
+    document.getElementById('currentArtist').innerText = song.artist;
     const coverImg = document.getElementById('currentCover');
-    coverImg.src = cover;
+    coverImg.src = song.cover;
     coverImg.style.display = 'block';
 
-    currentIndex = index; // Current gaane ka number set kiya
-    currentSongData = { title, artist, cover, url };
+    currentIndex = index; 
+    currentSongData = song;
 
-    currentAudio.src = url;
+    // YAHAN HAI ASLI MAGIC: Tere apne server se gaana stream ho raha hai!
+    const playUrl = `${API_BASE}/api/play?id=${song.id}`;
+    currentAudio.src = playUrl;
     
-    // Play karo, aur agar error aaye toh batao
     currentAudio.play().then(() => {
         isPlaying = true;
         updatePlayPauseIcon();
         
-        // Gaana play hote hi full screen khol do
         const player = document.getElementById('mainPlayer');
         if(!player.classList.contains('expanded')) {
             toggleFullScreen();
         }
     }).catch(err => {
         console.error(err);
-        alert("Bhai yeh gaana blocked hai ya load nahi ho raha, doosra try kar!");
+        alert("Bhai thoda wait kar, server gaana process kar raha hai. Phir se play daba!");
     });
 }
 
@@ -115,14 +116,12 @@ function updatePlayPauseIcon() {
     }
 }
 
-// Volume Control
 document.getElementById('volumeSlider').addEventListener('input', (e) => {
     currentAudio.volume = e.target.value;
 });
 
-// Full Screen Toggle
 function toggleFullScreen() {
-    if (!currentAudio.src) return; // Bina gaane ke bada mat karo
+    if (!currentAudio.src) return; 
     const player = document.getElementById('mainPlayer');
     player.classList.toggle('expanded');
     
@@ -134,20 +133,19 @@ function toggleFullScreen() {
     }
 }
 
-// Auto-Play Next (Jab ek gaana khatam ho)
 currentAudio.addEventListener('ended', playNext);
 
 function playNext() {
     if (currentIndex < currentPlaylist.length - 1) {
         let nextSong = currentPlaylist[currentIndex + 1];
-        loadAndPlaySong(nextSong.url, nextSong.title, nextSong.artist, nextSong.cover, currentIndex + 1);
+        loadAndPlaySong(nextSong, currentIndex + 1);
     }
 }
 
 function playPrevious() {
     if (currentIndex > 0) {
         let prevSong = currentPlaylist[currentIndex - 1];
-        loadAndPlaySong(prevSong.url, prevSong.title, prevSong.artist, prevSong.cover, currentIndex - 1);
+        loadAndPlaySong(prevSong, currentIndex - 1);
     }
 }
 
@@ -182,7 +180,6 @@ function renderLibrary() {
         grid.innerHTML = '<p style="color: #a0a0a0;">Your library is empty.</p>';
         return;
     }
-    // Library ke gaane bhi auto-play honge agar wo currentPlaylist ban jayein
     currentPlaylist = downloadedSongs; 
     downloadedSongs.forEach((song, index) => {
         const card = document.createElement('div');
@@ -193,7 +190,7 @@ function renderLibrary() {
             <div class="title">${song.title}</div>
             <div class="artist">${song.artist}</div>
         `;
-        card.onclick = () => loadAndPlaySong(song.url, song.title, song.artist, song.cover, index);
+        card.onclick = () => loadAndPlaySong(song, index);
         grid.appendChild(card);
     });
 }
