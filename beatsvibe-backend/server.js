@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const ytSearch = require('yt-search'); // Yeh naya package jo kabhi fail nahi hota!
+const ytSearch = require('yt-search'); 
 
 const app = express();
 app.use(cors());
@@ -12,17 +12,14 @@ app.get('/api/search', async (req, res) => {
     console.log(`\n🔍 YouTube par dhoondh raha hu: "${query}"`);
 
     try {
-        // Seedha YouTube se search kar rahe hain bina kisi API limit ke
         const result = await ytSearch(query);
-        const videos = result.videos.slice(0, 10); // Top 10 gaane
+        const videos = result.videos.slice(0, 10); 
 
         if (!videos || videos.length === 0) {
             return res.status(404).json({ error: "Koi gaana nahi mila bhai." });
         }
 
         const songs = videos.map(video => {
-            // Hum Invidious (YouTube ka audio bypass) use kar rahe hain
-            // itag=140 ka matlab hai 128kbps M4A (Full High-Quality Audio)
             const audioStreamUrl = `https://inv.tux.pizza/latest_version?id=${video.videoId}&itag=140`;
 
             return {
@@ -30,7 +27,7 @@ app.get('/api/search', async (req, res) => {
                 title: video.title,
                 artist: video.author.name,
                 cover: video.thumbnail,
-                url: audioStreamUrl // Pura full-length gaana!
+                url: audioStreamUrl 
             };
         });
 
@@ -43,7 +40,8 @@ app.get('/api/search', async (req, res) => {
     }
 });
 
-const PORT = 5000;
+// Render ke liye process.env.PORT zaroori hota hai
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`🚀 Ultimate BeatsVibe Server running at http://localhost:${PORT}`);
+    console.log(`🚀 Ultimate BeatsVibe Server running on port ${PORT}`);
 });

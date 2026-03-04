@@ -1,12 +1,11 @@
-// TERA YOUTUBE BACKEND LINK
-const API_URL = "http://localhost:5000/api/search?q=";
+// DHYAN DE: Yahan tera Render wala LIVE link daal diya hai!
+const API_URL = "https://beatsvibe-music.onrender.com/api/search?q=";
 
 let currentAudio = new Audio();
 let isPlaying = false;
 let currentSongData = null; 
 let downloadedSongs = []; 
 
-// Tabs Logic
 function switchTab(tabId) {
     document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-links li, .mobile-nav-item').forEach(n => n.classList.remove('active'));
@@ -33,14 +32,13 @@ document.getElementById('searchInput').addEventListener('keypress', function (e)
     }
 });
 
-// App khulte hi initial gaane load honge
 window.onload = () => searchSongs("Trending Hindi Songs 2024");
 
 async function searchSongs(query) {
     if (!query) return;
     document.getElementById('sectionTitle').innerText = `Results for "${query}"`;
     const grid = document.getElementById('resultsGrid');
-    grid.innerHTML = '<p style="color: #00f2fe;">Finding full audio tracks from YouTube...</p>';
+    grid.innerHTML = '<p style="color: #00f2fe;">Finding full audio tracks...</p>';
 
     try {
         const response = await fetch(API_URL + encodeURIComponent(query));
@@ -61,12 +59,11 @@ async function searchSongs(query) {
                 <div class="title">${song.title}</div>
                 <div class="artist">${song.artist}</div>
             `;
-            // Add click event to play FULL song
             card.onclick = () => loadAndPlaySong(song.url, song.title, song.artist, song.cover);
             grid.appendChild(card);
         });
     } catch (error) {
-        grid.innerHTML = '<p style="color: red;">Server connection error! Ensure Node.js server is running.</p>';
+        grid.innerHTML = '<p style="color: red;">Server se connect nahi ho paaya!</p>';
     }
 }
 
@@ -103,7 +100,6 @@ function updatePlayPauseIcon() {
     }
 }
 
-// Update Progress Bar
 currentAudio.addEventListener('timeupdate', () => {
     if(currentAudio.duration) {
         const progressPercent = (currentAudio.currentTime / currentAudio.duration) * 100;
@@ -111,7 +107,6 @@ currentAudio.addEventListener('timeupdate', () => {
     }
 });
 
-// Click on progress bar to seek
 document.getElementById('progressContainer').addEventListener('click', function(e) {
     if(currentAudio.duration) {
         const width = this.clientWidth;
@@ -121,7 +116,6 @@ document.getElementById('progressContainer').addEventListener('click', function(
     }
 });
 
-// Library Logic
 function downloadCurrentSong() {
     if (!currentSongData) { alert("Play a song first!"); return; }
     const alreadyExists = downloadedSongs.find(song => song.title === currentSongData.title);
@@ -151,7 +145,6 @@ function renderLibrary() {
     });
 }
 
-// Modal
 const modal = document.getElementById('authModal');
 function openModal() { modal.style.display = 'flex'; }
 function closeModal() { modal.style.display = 'none'; }
