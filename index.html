@@ -34,11 +34,11 @@
         <header class="topbar">
             <div class="search-bar" id="topSearchBar">
                 <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" id="searchInput" placeholder="Search for artists, songs (e.g., Arijit Singh)">
+                <input type="text" id="searchInput" placeholder="Search for artists, songs...">
             </div>
             <div class="auth-buttons">
-                <button class="btn-signup" onclick="openModal()">Sign up</button>
-                <button class="btn-login" onclick="openModal()">Log in</button>
+                <button class="btn-signup">Sign up</button>
+                <button class="btn-login">Log in</button>
             </div>
         </header>
 
@@ -54,19 +54,18 @@
                     <div class="card category-card" style="background: linear-gradient(45deg, #ff5e3a, #f0094a);" onclick="triggerSearch('Pop Hits')"><h3>Pop</h3></div>
                     <div class="card category-card" style="background: linear-gradient(45deg, #4facfe, #00f2fe);" onclick="triggerSearch('Hip Hop')"><h3>Hip Hop</h3></div>
                     <div class="card category-card" style="background: linear-gradient(45deg, #b224ef, #7579ff);" onclick="triggerSearch('Lo-Fi Relax')"><h3>Lo-Fi</h3></div>
-                    <div class="card category-card" style="background: linear-gradient(45deg, #0ba360, #3cba92);" onclick="triggerSearch('Latest Bollywood')"><h3>Bollywood</h3></div>
+                    <div class="card category-card" style="background: linear-gradient(45deg, #0ba360, #3cba92);" onclick="triggerSearch('Bollywood')"><h3>Bollywood</h3></div>
                 </div>
             </div>
 
             <div id="librarySection" class="tab-section">
                 <h2>Your Downloaded Beats</h2>
-                <p style="color: #a0a0a0; margin-bottom: 20px;">Offline saved songs will appear here.</p>
                 <div class="grid" id="libraryGrid"></div>
             </div>
         </div>
     </main>
 
-    <div class="player">
+    <div class="player" id="mainPlayer">
         <div class="player-left">
             <img id="currentCover" src="" alt="Cover">
             <div class="player-info">
@@ -77,9 +76,9 @@
         
         <div class="player-center">
             <div class="player-controls">
-                <i class="fa-solid fa-backward-step"></i>
+                <i class="fa-solid fa-backward-step" onclick="playPrevious()"></i>
                 <i class="fa-solid fa-play play-pause-btn" id="playPauseBtn" onclick="togglePlay()"></i>
-                <i class="fa-solid fa-forward-step"></i>
+                <i class="fa-solid fa-forward-step" onclick="playNext()"></i>
             </div>
             <div class="progress-container" id="progressContainer">
                 <div class="progress-bar" id="progressBar"></div>
@@ -87,7 +86,12 @@
         </div>
 
         <div class="player-right">
-            <i class="fa-solid fa-download download-btn" onclick="downloadCurrentSong()" title="Download to App"></i>
+            <div class="volume-container">
+                <i class="fa-solid fa-volume-high"></i>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="1">
+            </div>
+            <i class="fa-solid fa-download download-btn" onclick="downloadCurrentSong()" title="Download"></i>
+            <i class="fa-solid fa-expand expand-btn" id="expandBtn" onclick="toggleFullScreen()" title="Full Screen"></i>
         </div>
     </div>
 
@@ -96,21 +100,6 @@
         <div class="mobile-nav-item" onclick="switchTab('search')"><i class="fa-solid fa-magnifying-glass"></i></div>
         <div class="mobile-nav-item" onclick="switchTab('library')"><i class="fa-solid fa-book-open"></i></div>
     </nav>
-
-    <div class="modal-overlay" id="authModal">
-        <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">&times;</span>
-            <h2>Sign in to BeatsVibe</h2>
-            <button class="google-btn" onclick="closeModal(); alert('Google Auth requires Firebase setup!');">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="G" style="width:20px;">
-                Continue with Google
-            </button>
-            <div style="margin: 15px 0; color: #777;">OR</div>
-            <input type="email" placeholder="Email address" style="width:100%; padding:10px; margin-bottom:10px; background:#222; border:none; color:white; border-radius:5px;">
-            <input type="password" placeholder="Password" style="width:100%; padding:10px; margin-bottom:15px; background:#222; border:none; color:white; border-radius:5px;">
-            <button class="submit-btn" onclick="closeModal()">Log In</button>
-        </div>
-    </div>
 
     <script src="script.js"></script>
 </body>

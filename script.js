@@ -1,10 +1,11 @@
-// DHYAN DE: Yahan tera Render wala LIVE link daal diya hai!
 const API_URL = "https://beatsvibe-music.onrender.com/api/search?q=";
 
 let currentAudio = new Audio();
 let isPlaying = false;
 let currentSongData = null; 
 let downloadedSongs = []; 
+let currentPlaylist = []; // Gaano ki list save karega
+let currentIndex = 0;     // Kaunsa number chal raha hai
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
@@ -32,7 +33,7 @@ document.getElementById('searchInput').addEventListener('keypress', function (e)
     }
 });
 
-window.onload = () => searchSongs("Trending Hindi Songs 2024");
+window.onload = () => searchSongs("Trending Hits 2024");
 
 async function searchSongs(query) {
     if (!query) return;
@@ -49,8 +50,10 @@ async function searchSongs(query) {
             return;
         }
 
+        currentPlaylist = data.results; // Nayi list ko save kiya auto-play ke liye
         grid.innerHTML = ''; 
-        data.results.forEach(song => {
+
+        data.results.forEach((song, index) => {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
@@ -59,7 +62,8 @@ async function searchSongs(query) {
                 <div class="title">${song.title}</div>
                 <div class="artist">${song.artist}</div>
             `;
-            card.onclick = () => loadAndPlaySong(song.url, song.title, song.artist, song.cover);
+            // Click karne par index bhi bhej rahe hain
+            card.onclick = () => loadAndPlaySong(song.url, song.title, song.artist, song.cover, index);
             grid.appendChild(card);
         });
     } catch (error) {
@@ -67,19 +71,32 @@ async function searchSongs(query) {
     }
 }
 
-function loadAndPlaySong(url, title, artist, cover) {
+function loadAndPlaySong(url, title, artist, cover, index) {
     document.getElementById('currentTitle').innerText = title;
     document.getElementById('currentArtist').innerText = artist;
     const coverImg = document.getElementById('currentCover');
     coverImg.src = cover;
     coverImg.style.display = 'block';
 
+    currentIndex = index; // Current gaane ka number set kiya
     currentSongData = { title, artist, cover, url };
 
     currentAudio.src = url;
-    currentAudio.play();
-    isPlaying = true;
-    updatePlayPauseIcon();
+    
+    // Play karo, aur agar error aaye toh batao
+    currentAudio.play().then(() => {
+        isPlaying = true;
+        updatePlayPauseIcon();
+        
+        // Gaana play hote hi full screen khol do
+        const player = document.getElementById('mainPlayer');
+        if(!player.classList.contains('expanded')) {
+            toggleFullScreen();
+        }
+    }).catch(err => {
+        console.error(err);
+        alert("Bhai yeh gaana blocked hai ya load nahi ho raha, doosra try kar!");
+    });
 }
 
 function togglePlay() {
@@ -92,11 +109,45 @@ function togglePlay() {
 function updatePlayPauseIcon() {
     const btn = document.getElementById('playPauseBtn');
     if (isPlaying) {
-        btn.classList.remove('fa-play');
-        btn.classList.add('fa-pause');
+        btn.classList.replace('fa-play', 'fa-pause');
     } else {
-        btn.classList.remove('fa-pause');
-        btn.classList.add('fa-play');
+        btn.classList.replace('fa-pause', 'fa-play');
+    }
+}
+
+// Volume Control
+document.getElementById('volumeSlider').addEventListener('input', (e) => {
+    currentAudio.volume = e.target.value;
+});
+
+// Full Screen Toggle
+function toggleFullScreen() {
+    if (!currentAudio.src) return; // Bina gaane ke bada mat karo
+    const player = document.getElementById('mainPlayer');
+    player.classList.toggle('expanded');
+    
+    const btn = document.getElementById('expandBtn');
+    if(player.classList.contains('expanded')) {
+        btn.classList.replace('fa-expand', 'fa-compress');
+    } else {
+        btn.classList.replace('fa-compress', 'fa-expand');
+    }
+}
+
+// Auto-Play Next (Jab ek gaana khatam ho)
+currentAudio.addEventListener('ended', playNext);
+
+function playNext() {
+    if (currentIndex < currentPlaylist.length - 1) {
+        let nextSong = currentPlaylist[currentIndex + 1];
+        loadAndPlaySong(nextSong.url, nextSong.title, nextSong.artist, nextSong.cover, currentIndex + 1);
+    }
+}
+
+function playPrevious() {
+    if (currentIndex > 0) {
+        let prevSong = currentPlaylist[currentIndex - 1];
+        loadAndPlaySong(prevSong.url, prevSong.title, prevSong.artist, prevSong.cover, currentIndex - 1);
     }
 }
 
@@ -117,21 +168,23 @@ document.getElementById('progressContainer').addEventListener('click', function(
 });
 
 function downloadCurrentSong() {
-    if (!currentSongData) { alert("Play a song first!"); return; }
+    if (!currentSongData) return; 
     const alreadyExists = downloadedSongs.find(song => song.title === currentSongData.title);
-    if(alreadyExists) { alert("Song is already in your Library!"); return; }
+    if(alreadyExists) { alert("Already in Library!"); return; }
     downloadedSongs.push(currentSongData);
-    alert(`"${currentSongData.title}" downloaded to Your Library!`);
+    alert(`"${currentSongData.title}" added to Your Library!`);
 }
 
 function renderLibrary() {
     const grid = document.getElementById('libraryGrid');
     grid.innerHTML = '';
     if(downloadedSongs.length === 0) {
-        grid.innerHTML = '<p style="color: #a0a0a0;">Your library is empty. Click the download icon on the player!</p>';
+        grid.innerHTML = '<p style="color: #a0a0a0;">Your library is empty.</p>';
         return;
     }
-    downloadedSongs.forEach(song => {
+    // Library ke gaane bhi auto-play honge agar wo currentPlaylist ban jayein
+    currentPlaylist = downloadedSongs; 
+    downloadedSongs.forEach((song, index) => {
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
@@ -140,11 +193,7 @@ function renderLibrary() {
             <div class="title">${song.title}</div>
             <div class="artist">${song.artist}</div>
         `;
-        card.onclick = () => loadAndPlaySong(song.url, song.title, song.artist, song.cover);
+        card.onclick = () => loadAndPlaySong(song.url, song.title, song.artist, song.cover, index);
         grid.appendChild(card);
     });
 }
-
-const modal = document.getElementById('authModal');
-function openModal() { modal.style.display = 'flex'; }
-function closeModal() { modal.style.display = 'none'; }
